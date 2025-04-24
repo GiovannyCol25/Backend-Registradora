@@ -1,0 +1,6 @@
+CREATE TABLE movimientos (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    fechaMovimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    cantidad INTEGER NOT NULL,
+    tipoMovimiento ENUM('ENTRADA', 'SALIDA') NOT NULL
+);

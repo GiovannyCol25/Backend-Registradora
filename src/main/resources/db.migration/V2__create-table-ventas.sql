@@ -1,0 +1,7 @@
+CREATE TABLE venta (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    fecha_venta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    total_venta DECIMAL(10,2) NOT NULL,
+    descuento DECIMAL(5,2) DEFAULT 0,
+    forma_pago VARCHAR(50) NOT NULL
+);
