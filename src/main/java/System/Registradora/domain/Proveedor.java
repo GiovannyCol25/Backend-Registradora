@@ -26,6 +26,7 @@ public class Proveedor {
     @OneToMany(mappedBy = "proveedor", cascade = CascadeType.ALL)
     private List<Compra> compras = new ArrayList<>();
 
+    /*
     public Proveedor(){}
 
     public Proveedor(ProveedorDto datos){
@@ -34,6 +35,8 @@ public class Proveedor {
         this.nit = datos.nit();
         this.telefono = datos.telefono();
     }
+
+     */
 
     public void actualizarProveedor (ProveedorDto datos){
         if (datos.razonSocial() != null && datos.razonSocial().isEmpty()){

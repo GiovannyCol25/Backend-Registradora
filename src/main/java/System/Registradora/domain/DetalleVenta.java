@@ -28,12 +28,15 @@ public class DetalleVenta {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
+    /*
     public DetalleVenta() {
         this.venta = venta;
         this.producto = producto;
         this.cantidad = cantidad;
         this.precioUnitario = precioUnitario;
     }
+
+     */
 
     public Long getId() {
         return id;

@@ -27,6 +27,7 @@ public class Cliente {
     @OneToMany(mappedBy = "cliente")
     private List<Venta> ventas;
 
+    /*
     public Cliente(){}
 
     public Cliente(ClienteDto datos){
@@ -34,6 +35,8 @@ public class Cliente {
         this.nombre = datos.nombre();
         this.telefono = datos.telefono();
     }
+
+     */
 
     public void actualizarCliente(ClienteDto datos){
         if (datos.nombre() != null && !datos.nombre().isEmpty()){

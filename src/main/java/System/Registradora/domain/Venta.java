@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @Entity
 @Table(name = "ventas")
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Getter

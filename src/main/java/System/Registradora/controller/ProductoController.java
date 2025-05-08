@@ -29,7 +29,7 @@ public class ProductoController {
         @Transactional
         public ResponseEntity<List<ProductoDto>> registrarProducto (@RequestBody List<ProductoDto> productoDtos){
             List<ProductoDto> productosCreados = productoDtos.stream().map(productoDto -> {
-                Producto producto = new Producto(productoDto);
+                Producto producto = new Producto();
 
                 producto = productoRepository.save(producto);
 

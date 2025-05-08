@@ -35,7 +35,7 @@ public class ClienteController {
     @PostMapping
     @Transactional
     public ResponseEntity<ClienteDto> crearClientes(@RequestBody ClienteDto clienteDto){
-        Cliente cliente = new Cliente(clienteDto);
+        Cliente cliente = new Cliente();
         cliente = clienteRepository.save(cliente);
 
         ClienteDto clienteCreado = new ClienteDto(

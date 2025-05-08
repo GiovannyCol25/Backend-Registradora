@@ -4,6 +4,6 @@ public record EmpleadoDto(
         Long id,
         String nombreEmpleado,
         String cargo,
-        long telefono
+        Long telefono
 ) {
 }

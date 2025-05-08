@@ -24,7 +24,7 @@ public class ProveedorController {
     @Transactional
     public ResponseEntity<ProveedorDto> registrarProveedor(@RequestBody ProveedorDto proveedorDto) {
         // Convertir el DTO a entidad
-        Proveedor proveedor = new Proveedor(proveedorDto);
+        Proveedor proveedor = new Proveedor();
 
         // Guardar el proveedor en la base de datos
         proveedor = proveedorRepository.save(proveedor);

@@ -2,6 +2,7 @@ package System.Registradora.domain.usuario;
 
 import System.Registradora.infra.security.AutenticationService;
 import System.Registradora.infra.security.DatosJWTToken;
+import System.Registradora.infra.security.LoginRespuestaDTO;
 import System.Registradora.infra.security.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,9 +38,10 @@ public class UsuarioController {
                     autenticacionUsuarioDto.login(),
                     autenticacionUsuarioDto.clave());
             var auth = authenticationManager.authenticate(authToken);
+            var usuario = (Usuario) auth.getPrincipal();
             var tokenJWT = tokenService.generarToken((Usuario) auth.getPrincipal());
 
-            return ResponseEntity.ok(new DatosJWTToken(tokenJWT));
+            return ResponseEntity.ok(new LoginRespuestaDTO(tokenJWT, usuario.getRol()));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Autenticación inválida");
         }

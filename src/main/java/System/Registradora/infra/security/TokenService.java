@@ -25,6 +25,7 @@ public class TokenService {
                     .withIssuer("Registradora")
                     .withSubject(usuario.getUsername())
                     .withClaim("id", usuario.getId())
+                    .withClaim("rol", usuario.getRol().toUpperCase())
                     .withExpiresAt(generarFechaExpiracion())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {

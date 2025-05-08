@@ -2,6 +2,7 @@ package System.Registradora.domain;
 
 import System.Registradora.domain.usuario.Usuario;
 import System.Registradora.dto.EmpleadoDto;
+import System.Registradora.dto.EmpleadoUsuarioDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +13,6 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@NoArgsConstructor
 @Entity
 @Table(name = "empleados")
 public class Empleado {
@@ -24,7 +24,7 @@ public class Empleado {
     private String nombreEmpleado;
 
     private String cargo;
-    private long telefono;
+    private Long telefono;
 
     @OneToMany(mappedBy = "empleado")
     private List<Venta> ventas;
@@ -44,6 +44,7 @@ public class Empleado {
         this.telefono = datos.telefono();
     }
 
+    /*
     public void actualizarEmpleado(EmpleadoDto datos){
         if (datos.nombreEmpleado() != null && datos.nombreEmpleado().isEmpty()){
             this.nombreEmpleado = datos.nombreEmpleado();
@@ -55,6 +56,21 @@ public class Empleado {
             this.telefono = datos.telefono();
         }
     }
+
+     */
+
+    public void actualizarEmpleado(EmpleadoUsuarioDto datos) {
+        if (datos.nombreEmpleado() != null && !datos.nombreEmpleado().isBlank()) {
+            this.nombreEmpleado = datos.nombreEmpleado();
+        }
+        if (datos.cargo() != null && !datos.cargo().isBlank()) {
+            this.cargo = datos.cargo();
+        }
+        if (datos.telefono() != null && datos.telefono() != 0){
+            this.telefono = datos.telefono();
+        }
+    }
+
 
     public Long getId() {
         return id;
@@ -102,5 +118,13 @@ public class Empleado {
 
     public void setCompras(List<Compra> compras) {
         this.compras = compras;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 }

@@ -36,7 +36,7 @@ public class Compra {
     @ManyToOne
     @JoinColumn(name = "id_empleado", nullable = false)
     private Empleado empleado;
-
+/*
     public Compra(){}
 
     public Compra(CompraDto datos){
@@ -44,6 +44,7 @@ public class Compra {
         this.fechaCompra = datos.fechaCompra();
         this.totalCompra = datos.totalCompra();
     }
+*/
 
     public Long getId() {
         return id;
