@@ -25,7 +25,8 @@ public class TokenService {
                     .withIssuer("Registradora")
                     .withSubject(usuario.getUsername())
                     .withClaim("id", usuario.getId())
-                    .withClaim("rol", usuario.getRol().toUpperCase())
+                    .withClaim("rol", mapearRol(usuario.getRol()))
+                    .withArrayClaim("authorities", new String[]{"ROLE_" + usuario.getRol().toUpperCase()})
                     .withExpiresAt(generarFechaExpiracion())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
@@ -56,4 +57,14 @@ public class TokenService {
     private Instant generarFechaExpiracion (){
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-05:00"));
     }
+
+    private String mapearRol(String rolDb) {
+        return switch (rolDb.toUpperCase()) {
+            case "ADMIN" -> "ADMINISTRADOR";
+            case "VENDEDOR" -> "VENDEDOR";
+            case "ALMACENISTA" -> "ALMACENISTA";
+            default -> throw new IllegalArgumentException("Rol desconocido: " + rolDb);
+        };
+    }
+
 }

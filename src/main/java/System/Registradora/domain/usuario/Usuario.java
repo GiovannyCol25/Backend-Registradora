@@ -1,6 +1,7 @@
 package System.Registradora.domain.usuario;
 
 import System.Registradora.domain.Empleado;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,11 +24,12 @@ public class Usuario implements UserDetails {
 
     @OneToOne
     @JoinColumn(name = "empleado_id")
+    @JsonBackReference
     private Empleado empleado;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + this.rol.toUpperCase()));
     }
 
     @Override

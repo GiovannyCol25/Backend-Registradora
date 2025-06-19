@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -108,8 +109,10 @@ public class EmpleadoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
     }
 
-    @PutMapping("/{id}")
+
     @Transactional
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> actualizarEmpleado(@PathVariable Long id, @RequestBody EmpleadoUsuarioDto empleadoUsuarioDto) {
         Optional<Empleado> optionalEmpleado = empleadoRepository.findById(id);
         if (optionalEmpleado.isEmpty()) {
@@ -136,7 +139,7 @@ public class EmpleadoController {
             usuarioRepository.save(usuario);
         }
         empleadoRepository.save(empleado);
-        return ResponseEntity.ok("Empleado y usuario actualizados correctamente");
+        return ResponseEntity.ok(empleado);
     }
 
     /*

@@ -37,6 +37,7 @@ public class Producto {
 
     /*
     public Producto(){}
+     */
 
     public Producto(ProductoDto datos) {
         this.id = datos.id();
@@ -44,8 +45,6 @@ public class Producto {
         this.precioVenta = datos.precioVenta();
         this.codigoBarras = datos.codigoBarras();
     }
-
-     */
 
     public void actualizarDatos(ProductoDto datos){
         if (datos.nombreProducto() != null && !datos.nombreProducto().isEmpty()){

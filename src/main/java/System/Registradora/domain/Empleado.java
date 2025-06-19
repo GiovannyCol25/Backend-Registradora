@@ -3,6 +3,7 @@ package System.Registradora.domain;
 import System.Registradora.domain.usuario.Usuario;
 import System.Registradora.dto.EmpleadoDto;
 import System.Registradora.dto.EmpleadoUsuarioDto;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,6 +34,7 @@ public class Empleado {
     private List<Compra> compras = new ArrayList<>();
 
     @OneToOne(mappedBy = "empleado")
+    @JsonManagedReference
     private Usuario usuario;
 
     public Empleado(){}

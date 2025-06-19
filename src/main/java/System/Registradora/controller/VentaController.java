@@ -177,10 +177,11 @@ public class VentaController {
         return ventas.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(ventas);
     }
 
+    /*
     // Endpoint para obtener las ventas diarias
     @GetMapping("/diarias")
     public ResponseEntity<List<VentaDto>> obtenerVentasDiarias() {
-        List<Venta> ventasDiarias = ventaRepository.obtenerVentasDiarias();
+        List<Venta> ventasDiarias = ventaRepository.obtenerTotalVentasDiarias();
 
         if (!ventasDiarias.isEmpty()) {
             List<VentaDto> ventasDto = ventasDiarias.stream().map(venta ->
@@ -203,6 +204,7 @@ public class VentaController {
             return ResponseEntity.notFound().build();
         }
     }
+    */
 
     @GetMapping("/ventas-diarias/total/{fecha}")
     public ResponseEntity<TotalVentasPorDiaDTO> obtenerTotalVentasFecha(@PathVariable @DateTimeFormat

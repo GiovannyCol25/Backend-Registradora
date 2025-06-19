@@ -33,8 +33,16 @@ public class SecurityConfiguration {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/empleados/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/empleados").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/empleados/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/empleados/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/empleados").hasRole("ADMIN")//
+                        .requestMatchers(HttpMethod.DELETE, "/empleados/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/productos").hasAnyRole("ADMIN", "ALMACENISTA")
+                        .requestMatchers(HttpMethod.POST, "/productos").hasAnyRole("ADMIN", "ALMACENISTA")
+                        .requestMatchers(HttpMethod.POST, "/ventas").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers(HttpMethod.GET,"/productos/**").hasAnyRole("ADMIN", "ALMACENISTA")
+                        .requestMatchers(HttpMethod.GET, "/consultas/**").hasAnyRole( "ADMIN", "ALMACENISTA", "VENDEDOR")
+                        .requestMatchers(HttpMethod.GET,"/ventas").hasAnyRole("ADMIN", "VENDEDOR")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
