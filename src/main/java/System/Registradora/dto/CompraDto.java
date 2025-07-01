@@ -9,6 +9,7 @@ public record CompraDto(
         Long id,
         Date fechaCompra,
         Double totalCompra,
+        String numeroFactura,
         List<DetalleCompraDto> detalleCompraDtoList
 ) {
 }

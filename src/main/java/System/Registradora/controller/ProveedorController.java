@@ -25,6 +25,9 @@ public class ProveedorController {
     public ResponseEntity<ProveedorDto> registrarProveedor(@RequestBody ProveedorDto proveedorDto) {
         // Convertir el DTO a entidad
         Proveedor proveedor = new Proveedor();
+        proveedor.setRazonSocial(proveedorDto.razonSocial());
+        proveedor.setNit(proveedorDto.nit());
+        proveedor.setTelefono(proveedorDto.telefono());
 
         // Guardar el proveedor en la base de datos
         proveedor = proveedorRepository.save(proveedor);
@@ -74,6 +77,42 @@ public class ProveedorController {
         }
     }
 
+    @GetMapping("/nombre/{nombre}")
+    public ResponseEntity<List<ProveedorDto>> consultarProveedorNombre (@PathVariable ("nombre") String razonSocial){
+        String nombreBuscado = razonSocial.trim().toLowerCase();
+        List<Proveedor> proveedorConsultado = proveedorRepository.findByRazonSocial(razonSocial);
+
+        if (proveedorConsultado.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }else {
+            List<ProveedorDto> proveedorDtos = proveedorConsultado.stream()
+                    .map(proveedor -> new ProveedorDto(
+                            proveedor.getId(),
+                            proveedor.getNit(),
+                            proveedor.getRazonSocial(),
+                            proveedor.getTelefono()
+                    )).collect(Collectors.toList());
+            return ResponseEntity.ok(proveedorDtos);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProveedorDto> consultarProveedorId(@PathVariable Long id){
+        Optional<Proveedor> proveedorConsultado = proveedorRepository.findById(id);
+        if (proveedorConsultado.isPresent()){
+            Proveedor proveedor = proveedorConsultado.get();
+            ProveedorDto proveedorDto = new ProveedorDto(
+                    proveedor.getId(),
+                    proveedor.getNit(),
+                    proveedor.getRazonSocial(),
+                    proveedor.getTelefono()
+            );
+            return ResponseEntity.ok(proveedorDto);
+        }else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @DeleteMapping("/{id}")
-    public void eliminar (@PathVariable long id){proveedorRepository.deleteById(id);}
+    public void eliminar (@PathVariable Long id){proveedorRepository.deleteById(id);}
 }

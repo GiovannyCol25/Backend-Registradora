@@ -27,6 +27,10 @@ public class Producto {
     @Column(unique = true)
     private String codigoBarras;
 
+    @Column(nullable = false)
+    private Integer stock = 0;
+
+
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<DetalleVenta> detallesVenta;

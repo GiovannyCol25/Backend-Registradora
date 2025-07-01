@@ -1,0 +1,1 @@
+ALTER TABLE compras ADD COLUMN numero_factura VARCHAR(50) NOT NULL;

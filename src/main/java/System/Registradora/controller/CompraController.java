@@ -3,6 +3,7 @@ package System.Registradora.controller;
 import System.Registradora.domain.*;
 import System.Registradora.domain.repositories.CompraRepository;
 import System.Registradora.domain.repositories.DetalleCompraRepository;
+import System.Registradora.domain.repositories.MovimientoRepository;
 import System.Registradora.domain.repositories.ProductoRepository;
 import System.Registradora.dto.CompraDto;
 import System.Registradora.dto.DetalleCompraDto;
@@ -16,10 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -36,6 +34,9 @@ public class CompraController {
     @Autowired
     private DetalleCompraRepository detalleCompraRepository;
 
+    @Autowired
+    private MovimientoRepository movimientoRepository;
+
     @PostMapping
     @Transactional
     public ResponseEntity<CompraDto> registrarCompra (@RequestBody CompraDto compraDto){
@@ -46,7 +47,7 @@ public class CompraController {
 
         List<DetalleCompra> detalleCompra = compraDto.detalleCompraDtoList().stream().map(detalleCompraDto -> {
             Optional<Producto> productoOptional = productoRepository.findByNombreProducto(detalleCompraDto.nombreProducto());
-            if (productoOptional.isPresent()){
+            if (productoOptional.isEmpty()){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Producto no encontrado: " + detalleCompraDto.nombreProducto());
             }
             Producto producto = productoOptional.get();
@@ -54,11 +55,30 @@ public class CompraController {
             double subtotal = detalleCompraDto.precioUnitario() * detalleCompraDto.cantidad();
             totalCompra.updateAndGet(c -> c + subtotal);
 
+            // Actualizar stock
+            producto.setStock(producto.getStock() + detalleCompraDto.cantidad());
+            productoRepository.save(producto);
+
             DetalleCompra detalleCompra1 = new DetalleCompra();
             detalleCompra1.setCompra(compraFinal);
             detalleCompra1.setProducto(producto);
             detalleCompra1.setCantidad(detalleCompraDto.cantidad());
             detalleCompra1.setPrecioUnitario(detalleCompraDto.precioUnitario());
+
+            //Registrar movimiento de entrada
+            Movimiento movimiento = new Movimiento();
+            movimiento.setCantidad(detalleCompraDto.cantidad());
+            movimiento.setTipoMovimiento(TipoMovimiento.Entrada);
+            movimiento.setFechaMovimiento(new Date());
+            movimiento.setDetalleCompra(detalleCompra1);
+            movimiento.setProducto(producto);
+            movimientoRepository.save(movimiento);
+
+            movimientoRepository.save(movimiento);
+
+            // Actualizar stock del producto (entrada)
+            producto.setStock(producto.getStock() + detalleCompraDto.cantidad());
+            productoRepository.save(producto);
 
             return detalleCompra1;
         }).toList();
@@ -73,6 +93,7 @@ public class CompraController {
                         compra.getId(),
                         compra.getFechaCompra(),
                         compra.getTotalCompra(),
+                        compra.getNumeroFactura(),
                         detalleCompra.stream().map(detalleCompra1 -> new DetalleCompraDto(
                                 detalleCompra1.getId(),
                                 detalleCompra1.getProducto().getNombreProducto(),
@@ -90,6 +111,7 @@ public class CompraController {
                         compra.getId(),
                         compra.getFechaCompra(),
                         compra.getTotalCompra(),
+                        compra.getNumeroFactura(),
                         compra.getDetalleCompraList().stream().map(detalle ->
                                 new DetalleCompraDto(
                                         detalle.getId(),
@@ -117,6 +139,7 @@ public class CompraController {
                     compra.getId(),
                     compra.getFechaCompra(),
                     compra.getTotalCompra(),
+                    compra.getNumeroFactura(),
                     compra.getDetalleCompraList().stream().map(detalleCompra ->
                             new DetalleCompraDto(
                                     detalleCompra.getId(),

@@ -36,14 +36,16 @@ public class ClienteController {
     @Transactional
     public ResponseEntity<ClienteDto> crearClientes(@RequestBody ClienteDto clienteDto){
         Cliente cliente = new Cliente();
+        cliente.setNombre(clienteDto.nombre());
+        cliente.setTelefono(clienteDto.telefono());
         cliente = clienteRepository.save(cliente);
 
-        ClienteDto clienteCreado = new ClienteDto(
+        ClienteDto clienteDto1 = new ClienteDto(
                 cliente.getId(),
                 cliente.getNombre(),
                 cliente.getTelefono()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(clienteCreado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(clienteDto1);
     }
 
     @PutMapping("/{id}")
@@ -63,5 +65,26 @@ public class ClienteController {
         }else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ClienteDto> consultarClienteId(@PathVariable Long id) {
+        Optional<Cliente> clienteConsultado = clienteRepository.findById(id);
+        if (clienteConsultado.isPresent()){
+            Cliente cliente = clienteConsultado.get();
+            ClienteDto clienteDto = new ClienteDto(
+                    cliente.getId(),
+                    cliente.getNombre(),
+                    cliente.getTelefono()
+            );
+            return ResponseEntity.ok(clienteDto);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public void eliminarCliente (@PathVariable Long id){
+        clienteRepository.deleteById(id);
     }
 }

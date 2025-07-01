@@ -25,6 +25,9 @@ public class Compra {
     @NotNull
     private Double totalCompra;
 
+    @Column(name = "numero_factura")
+    private String numeroFactura;
+
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DetalleCompra> detalleCompraList;
 
@@ -36,6 +39,7 @@ public class Compra {
     @ManyToOne
     @JoinColumn(name = "id_empleado", nullable = false)
     private Empleado empleado;
+
 /*
     public Compra(){}
 

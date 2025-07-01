@@ -24,7 +24,7 @@ public class Movimiento {
     @Enumerated(EnumType.STRING) // Almacena como texto: 'ENTRADA' o 'SALIDA'
     private TipoMovimiento tipoMovimiento;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "id_producto")
     private Producto producto;
 
@@ -66,14 +66,6 @@ public class Movimiento {
 
     public void setTipoMovimiento(TipoMovimiento tipoMovimiento) {
         this.tipoMovimiento = tipoMovimiento;
-    }
-
-    public Producto getProducto() {
-        return producto;
-    }
-
-    public void setProducto(Producto producto) {
-        this.producto = producto;
     }
 
     public DetalleVenta getDetalleVenta() {

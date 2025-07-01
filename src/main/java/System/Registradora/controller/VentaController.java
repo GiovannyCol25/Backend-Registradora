@@ -2,6 +2,7 @@ package System.Registradora.controller;
 
 import System.Registradora.domain.*;
 import System.Registradora.domain.repositories.DetalleVentaRepository;
+import System.Registradora.domain.repositories.MovimientoRepository;
 import System.Registradora.domain.repositories.ProductoRepository;
 import System.Registradora.domain.repositories.VentaRepository;
 import System.Registradora.dto.*;
@@ -36,6 +37,9 @@ public class VentaController {
 
     @Autowired
     private DetalleVentaRepository detalleVentaRepository;
+
+    @Autowired
+    private MovimientoRepository movimientoRepository;
 
 //    public VentaController(VentaRepository ventaRepository, ProductoRepository productoRepository){
 //        this.ventaRepository = ventaRepository;
@@ -77,6 +81,10 @@ public class VentaController {
                 precioUnitario = detalleDto.precioUnitario(); // ✅ Usar el precio ingresado manualmente
             }
 
+            if (producto.getStock() < detalleDto.cantidad()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stock insuficiente para el producto: " + producto.getNombreProducto());
+            }
+
             double subtotal = precioUnitario * detalleDto.cantidad(); // ✅ Calcular subtotal
             totalVenta.updateAndGet(v -> v + subtotal); // ✅ Actualizar total de forma segura
 
@@ -86,6 +94,15 @@ public class VentaController {
             detalleVenta.setProducto(producto);
             detalleVenta.setCantidad(detalleDto.cantidad());
             detalleVenta.setPrecioUnitario(precioUnitario);
+
+            // Registrar movimiento de salida
+            Movimiento movimiento = new Movimiento();
+            movimiento.setCantidad(detalleDto.cantidad());
+            movimiento.setTipoMovimiento(TipoMovimiento.Salida);
+            movimiento.setFechaMovimiento(new Date());
+            movimiento.setDetalleVenta(detalleVenta);
+            movimiento.setProducto(producto);
+            movimientoRepository.save(movimiento);
 
             return detalleVenta;
         }).toList();
