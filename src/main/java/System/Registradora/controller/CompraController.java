@@ -1,10 +1,7 @@
 package System.Registradora.controller;
 
 import System.Registradora.domain.*;
-import System.Registradora.domain.repositories.CompraRepository;
-import System.Registradora.domain.repositories.DetalleCompraRepository;
-import System.Registradora.domain.repositories.MovimientoRepository;
-import System.Registradora.domain.repositories.ProductoRepository;
+import System.Registradora.domain.repositories.*;
 import System.Registradora.dto.CompraDto;
 import System.Registradora.dto.DetalleCompraDto;
 import jakarta.transaction.Transactional;
@@ -14,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -37,71 +35,88 @@ public class CompraController {
     @Autowired
     private MovimientoRepository movimientoRepository;
 
+    @Autowired
+    private ProveedorRepository proveedorRepository;
+
+    @Autowired
+    private EmpleadoRepository empleadoRepository;
+
     @PostMapping
     @Transactional
     public ResponseEntity<CompraDto> registrarCompra (@RequestBody CompraDto compraDto){
+        System.out.println("⚙️ DTO recibido: empleadoId = " + compraDto.empleadoId());
+
+        if (compraDto.empleadoId() == null || compraDto.empleadoId() == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El empleadoId es null");
+        }
+
         Compra compra = new Compra();
+        compra.setFechaCompra(new Date());
+        compra.setNumeroFactura(compraDto.numeroFactura());
+
+        Proveedor proveedor = proveedorRepository.findById(compraDto.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Proveedor no encontrado"));
+        compra.setProveedor(proveedor);
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Empleado empleado = empleadoRepository.findById(compraDto.empleadoId())
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Empleado no autenticado"));
+        compra.setEmpleado(empleado);
+
         compra = compraRepository.save(compra);
-        final Compra compraFinal = compra;
-        AtomicReference<Double> totalCompra = new AtomicReference<>(0.0);
 
-        List<DetalleCompra> detalleCompra = compraDto.detalleCompraDtoList().stream().map(detalleCompraDto -> {
-            Optional<Producto> productoOptional = productoRepository.findByNombreProducto(detalleCompraDto.nombreProducto());
-            if (productoOptional.isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Producto no encontrado: " + detalleCompraDto.nombreProducto());
-            }
-            Producto producto = productoOptional.get();
+        double totalCompra = 0.0;
 
-            double subtotal = detalleCompraDto.precioUnitario() * detalleCompraDto.cantidad();
-            totalCompra.updateAndGet(c -> c + subtotal);
+        List<DetalleCompra> detalles = new ArrayList<>();
+        for (DetalleCompraDto dto : compraDto.detalleCompraDtoList()) {
+            Producto producto = productoRepository.findById(dto.productoId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Producto no encontrado"));
 
-            // Actualizar stock
-            producto.setStock(producto.getStock() + detalleCompraDto.cantidad());
+            DetalleCompra detalle = new DetalleCompra();
+            detalle.setCompra(compra);
+            detalle.setProducto(producto);
+            detalle.setCantidad(dto.cantidad());
+            detalle.setPrecioUnitario(dto.precioUnitario());
+
+            detalleCompraRepository.save(detalle);
+            detalles.add(detalle);
+
+            producto.setStock(producto.getStock() + dto.cantidad());
             productoRepository.save(producto);
-
-            DetalleCompra detalleCompra1 = new DetalleCompra();
-            detalleCompra1.setCompra(compraFinal);
-            detalleCompra1.setProducto(producto);
-            detalleCompra1.setCantidad(detalleCompraDto.cantidad());
-            detalleCompra1.setPrecioUnitario(detalleCompraDto.precioUnitario());
 
             //Registrar movimiento de entrada
             Movimiento movimiento = new Movimiento();
-            movimiento.setCantidad(detalleCompraDto.cantidad());
+            movimiento.setProducto(producto);
+            movimiento.setDetalleCompra(detalle);
+            movimiento.setCantidad(dto.cantidad());
             movimiento.setTipoMovimiento(TipoMovimiento.Entrada);
             movimiento.setFechaMovimiento(new Date());
-            movimiento.setDetalleCompra(detalleCompra1);
-            movimiento.setProducto(producto);
             movimientoRepository.save(movimiento);
 
-            movimientoRepository.save(movimiento);
+            totalCompra += dto.cantidad() * dto.precioUnitario();
+        }
 
-            // Actualizar stock del producto (entrada)
-            producto.setStock(producto.getStock() + detalleCompraDto.cantidad());
-            productoRepository.save(producto);
-
-            return detalleCompra1;
-        }).toList();
-
-        detalleCompraRepository.saveAll(detalleCompra);
-
-        compra.setTotalCompra(totalCompra.get());
+        compra.setTotalCompra(totalCompra);
         compraRepository.save(compra);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                new CompraDto(
-                        compra.getId(),
-                        compra.getFechaCompra(),
-                        compra.getTotalCompra(),
-                        compra.getNumeroFactura(),
-                        detalleCompra.stream().map(detalleCompra1 -> new DetalleCompraDto(
-                                detalleCompra1.getId(),
-                                detalleCompra1.getProducto().getNombreProducto(),
-                                detalleCompra1.getCantidad(),
-                                detalleCompra1.getPrecioUnitario()
-                        )).toList()
-                )
+        List<DetalleCompraDto> detallesRespuesta = detalles.stream().map(detalle -> new DetalleCompraDto(
+                detalle.getId(),
+                detalle.getProducto().getId(),
+                detalle.getProducto().getNombreProducto(),
+                detalle.getCantidad(),
+                detalle.getPrecioUnitario()
+        )).toList();
+
+        CompraDto respuesta = new CompraDto(
+                compra.getId(),
+                compra.getFechaCompra(),
+                compra.getTotalCompra(),
+                compra.getNumeroFactura(),
+                proveedor.getId(),
+                empleado.getId(),
+                detallesRespuesta
         );
+        return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
     }
 
     @GetMapping
@@ -112,9 +127,12 @@ public class CompraController {
                         compra.getFechaCompra(),
                         compra.getTotalCompra(),
                         compra.getNumeroFactura(),
+                        compra.getProveedor().getId(),
+                        compra.getEmpleado().getId(),
                         compra.getDetalleCompraList().stream().map(detalle ->
                                 new DetalleCompraDto(
                                         detalle.getId(),
+                                        detalle.getProducto().getId(),
                                         detalle.getProducto().getNombreProducto(),
                                         detalle.getCantidad(),
                                         detalle.getPrecioUnitario()
@@ -140,9 +158,12 @@ public class CompraController {
                     compra.getFechaCompra(),
                     compra.getTotalCompra(),
                     compra.getNumeroFactura(),
+                    compra.getProveedor().getId(),
+                    compra.getEmpleado().getId(),
                     compra.getDetalleCompraList().stream().map(detalleCompra ->
                             new DetalleCompraDto(
                                     detalleCompra.getId(),
+                                    detalleCompra.getProducto().getId(),
                                     detalleCompra.getProducto().getNombreProducto(),
                                     detalleCompra.getCantidad(),
                                     detalleCompra.getPrecioUnitario())

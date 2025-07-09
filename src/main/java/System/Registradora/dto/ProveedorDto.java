@@ -4,6 +4,6 @@ public record ProveedorDto(
         Long id,
         String razonSocial,
         String nit,
-        long telefono
+        Long telefono
 ) {
 }

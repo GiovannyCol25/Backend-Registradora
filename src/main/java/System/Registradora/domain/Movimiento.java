@@ -1,15 +1,13 @@
 package System.Registradora.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
 @Data
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "movimientos")
@@ -36,51 +34,4 @@ public class Movimiento {
     @JoinColumn(name = "id_detalle_compra")
     private DetalleCompra detalleCompra;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Date getFechaMovimiento() {
-        return fechaMovimiento;
-    }
-
-    public void setFechaMovimiento(Date fechaMovimiento) {
-        this.fechaMovimiento = fechaMovimiento;
-    }
-
-    public int getCantidad() {
-        return cantidad;
-    }
-
-    public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
-    }
-
-    public TipoMovimiento getTipoMovimiento() {
-        return tipoMovimiento;
-    }
-
-    public void setTipoMovimiento(TipoMovimiento tipoMovimiento) {
-        this.tipoMovimiento = tipoMovimiento;
-    }
-
-    public DetalleVenta getDetalleVenta() {
-        return detalleVenta;
-    }
-
-    public void setDetalleVenta(DetalleVenta detalleVenta) {
-        this.detalleVenta = detalleVenta;
-    }
-
-    public DetalleCompra getDetalleCompra() {
-        return detalleCompra;
-    }
-
-    public void setDetalleCompra(DetalleCompra detalleCompra) {
-        this.detalleCompra = detalleCompra;
-    }
 }

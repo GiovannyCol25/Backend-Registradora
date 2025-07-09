@@ -39,13 +39,13 @@ public class Proveedor {
      */
 
     public void actualizarProveedor (ProveedorDto datos){
-        if (datos.razonSocial() != null && datos.razonSocial().isEmpty()){
+        if (datos.razonSocial() != null && !datos.razonSocial().isBlank()){
             this.razonSocial = datos.razonSocial();
         }
-        if (datos.nit() != null && datos.nit().isEmpty()){
+        if (datos.nit() != null && !datos.nit().isBlank()){
             this.nit = datos.nit();
         }
-        if (datos.telefono() != 0){
+        if (datos.telefono() != null && datos.telefono() != 0){
             this.telefono = datos.telefono();
         }
     }

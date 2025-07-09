@@ -8,9 +8,12 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
-    @Query("SELECT p FROM Cliente p WHERE LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
-    boolean existsByName(String nombre);
+/*    @Query("SELECT p FROM Cliente p WHERE LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
+    boolean existsByName(String nombre);*/
 
     @Query("SELECT c FROM Cliente c")
     List<ClienteDto> listarClientes();
+
+    @Query("SELECT p FROM Cliente p WHERE LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
+    List<Cliente> findByNombreClienteContainingIgnoreCase(String nombre);
 }

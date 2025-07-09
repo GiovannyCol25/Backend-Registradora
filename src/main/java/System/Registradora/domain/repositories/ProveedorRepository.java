@@ -11,5 +11,5 @@ import java.util.List;
 public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
 
     @Query("SELECT p FROM Proveedor p WHERE LOWER(p.razonSocial) LIKE LOWER(CONCAT('%', :razonSocial, '%'))")
-    List<Proveedor> findByRazonSocial(String razonSocial);
+    List<Proveedor> findByRazonSocialContainingIgnoreCase(String razonSocial);
 }

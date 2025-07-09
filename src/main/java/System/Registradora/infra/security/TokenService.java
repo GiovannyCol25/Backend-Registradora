@@ -21,14 +21,23 @@ public class TokenService {
     public String generarToken(Usuario usuario) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(apiSecret);
-            return JWT.create()
+            var jwtBuilder = JWT.create()
+            //return JWT.create()
                     .withIssuer("Registradora")
                     .withSubject(usuario.getUsername())
                     .withClaim("id", usuario.getId())
                     .withClaim("rol", mapearRol(usuario.getRol()))
                     .withArrayClaim("authorities", new String[]{"ROLE_" + usuario.getRol().toUpperCase()})
-                    .withExpiresAt(generarFechaExpiracion())
-                    .sign(algorithm);
+                    .withExpiresAt(generarFechaExpiracion());
+                    //.sign(algorithm);
+
+            // ✅ Agregar empleadoId si existe
+            if (usuario.getEmpleado() != null) {
+                jwtBuilder.withClaim("empleadoId", usuario.getEmpleado().getId());
+            }
+
+            return jwtBuilder.sign(algorithm);
+
         } catch (JWTCreationException exception) {
             throw new RuntimeException("Error al generar el token", exception);
         }

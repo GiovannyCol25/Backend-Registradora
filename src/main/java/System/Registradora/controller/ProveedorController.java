@@ -80,7 +80,7 @@ public class ProveedorController {
     @GetMapping("/nombre/{nombre}")
     public ResponseEntity<List<ProveedorDto>> consultarProveedorNombre (@PathVariable ("nombre") String razonSocial){
         String nombreBuscado = razonSocial.trim().toLowerCase();
-        List<Proveedor> proveedorConsultado = proveedorRepository.findByRazonSocial(razonSocial);
+        List<Proveedor> proveedorConsultado = proveedorRepository.findByRazonSocialContainingIgnoreCase(razonSocial);
 
         if (proveedorConsultado.isEmpty()){
             return ResponseEntity.notFound().build();
@@ -88,8 +88,8 @@ public class ProveedorController {
             List<ProveedorDto> proveedorDtos = proveedorConsultado.stream()
                     .map(proveedor -> new ProveedorDto(
                             proveedor.getId(),
-                            proveedor.getNit(),
                             proveedor.getRazonSocial(),
+                            proveedor.getNit(),
                             proveedor.getTelefono()
                     )).collect(Collectors.toList());
             return ResponseEntity.ok(proveedorDtos);
@@ -103,8 +103,8 @@ public class ProveedorController {
             Proveedor proveedor = proveedorConsultado.get();
             ProveedorDto proveedorDto = new ProveedorDto(
                     proveedor.getId(),
-                    proveedor.getNit(),
                     proveedor.getRazonSocial(),
+                    proveedor.getNit(),
                     proveedor.getTelefono()
             );
             return ResponseEntity.ok(proveedorDto);

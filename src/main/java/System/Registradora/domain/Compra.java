@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Getter
+@Setter
 public class Compra {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,52 +50,4 @@ public class Compra {
         this.totalCompra = datos.totalCompra();
     }
 */
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Date getFechaCompra() {
-        return fechaCompra;
-    }
-
-    public void setFechaCompra(Date fechaCompra) {
-        this.fechaCompra = fechaCompra;
-    }
-
-    public Double getTotalCompra() {
-        return totalCompra;
-    }
-
-    public void setTotalCompra(Double totalCompra) {
-        this.totalCompra = totalCompra;
-    }
-
-    public List<DetalleCompra> getDetalleCompraList() {
-        return detalleCompraList;
-    }
-
-    public void setDetalleCompraList(List<DetalleCompra> detalleCompraList) {
-        this.detalleCompraList = detalleCompraList;
-    }
-
-    public Proveedor getProveedor() {
-        return proveedor;
-    }
-
-    public void setProveedor(Proveedor proveedor) {
-        this.proveedor = proveedor;
-    }
-
-    public Empleado getEmpleado() {
-        return empleado;
-    }
-
-    public void setEmpleado(Empleado empleado) {
-        this.empleado = empleado;
-    }
 }

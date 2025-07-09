@@ -67,6 +67,24 @@ public class ClienteController {
         }
     }
 
+    @GetMapping("/nombre/{nombre}")
+    public ResponseEntity<List<ClienteDto>> consultarClienteNombre(@PathVariable String nombre){
+        String clienteProcesado = nombre.trim().toLowerCase();
+        List<Cliente> nombreCliente = clienteRepository.findByNombreClienteContainingIgnoreCase(nombre);
+
+        if (!nombreCliente.isEmpty()) {
+            List<ClienteDto> clienteDtos = nombreCliente.stream()
+                    .map(cliente -> new ClienteDto(
+                            cliente.getId(),
+                            cliente.getNombre(),
+                            cliente.getTelefono()
+                    )).collect(Collectors.toList());
+            return ResponseEntity.ok(clienteDtos);
+        }else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ClienteDto> consultarClienteId(@PathVariable Long id) {
         Optional<Cliente> clienteConsultado = clienteRepository.findById(id);
