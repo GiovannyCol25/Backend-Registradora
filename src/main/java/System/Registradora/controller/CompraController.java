@@ -2,8 +2,11 @@ package System.Registradora.controller;
 
 import System.Registradora.domain.*;
 import System.Registradora.domain.repositories.*;
+import System.Registradora.domain.usuario.Usuario;
+import System.Registradora.domain.usuario.UsuarioRepository;
 import System.Registradora.dto.CompraDto;
 import System.Registradora.dto.DetalleCompraDto;
+import System.Registradora.infra.security.AuthUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -41,28 +45,36 @@ public class CompraController {
     @Autowired
     private EmpleadoRepository empleadoRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     @PostMapping
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'ALMACENISTA')")
     public ResponseEntity<CompraDto> registrarCompra (@RequestBody CompraDto compraDto){
-        System.out.println("⚙️ DTO recibido: empleadoId = " + compraDto.empleadoId());
-
-        if (compraDto.empleadoId() == null || compraDto.empleadoId() == 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El empleadoId es null");
-        }
-
+        System.out.println("📦 Datos recibidos para la compra: " + compraDto);
         Compra compra = new Compra();
         compra.setFechaCompra(new Date());
         compra.setNumeroFactura(compraDto.numeroFactura());
 
-        Proveedor proveedor = proveedorRepository.findById(compraDto.id())
+        Proveedor proveedor = proveedorRepository.findById(compraDto.proveedorId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Proveedor no encontrado"));
         compra.setProveedor(proveedor);
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Empleado empleado = empleadoRepository.findById(compraDto.empleadoId())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Empleado no autenticado"));
+        String login = AuthUtils.getLoginFromToken();
+        Usuario usuario = usuarioRepository.findUsuarioByLogin(login);
+        System.out.println("que usuario está logueado?" + login);
+        System.out.println("Login: " + login);
+
+        if (usuario == null || usuario.getEmpleado() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario sin empleado asignado");
+        }
+        Empleado empleado = usuario.getEmpleado();
         compra.setEmpleado(empleado);
 
+        System.out.println("Empleado: " + empleado.getId());
+        System.out.println("Proveedor: " + proveedor.getId());
+        System.out.println("Compra antes de guardar: " + compra);
         compra = compraRepository.save(compra);
 
         double totalCompra = 0.0;
@@ -113,7 +125,6 @@ public class CompraController {
                 compra.getTotalCompra(),
                 compra.getNumeroFactura(),
                 proveedor.getId(),
-                empleado.getId(),
                 detallesRespuesta
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
@@ -128,7 +139,6 @@ public class CompraController {
                         compra.getTotalCompra(),
                         compra.getNumeroFactura(),
                         compra.getProveedor().getId(),
-                        compra.getEmpleado().getId(),
                         compra.getDetalleCompraList().stream().map(detalle ->
                                 new DetalleCompraDto(
                                         detalle.getId(),
@@ -159,7 +169,6 @@ public class CompraController {
                     compra.getTotalCompra(),
                     compra.getNumeroFactura(),
                     compra.getProveedor().getId(),
-                    compra.getEmpleado().getId(),
                     compra.getDetalleCompraList().stream().map(detalleCompra ->
                             new DetalleCompraDto(
                                     detalleCompra.getId(),

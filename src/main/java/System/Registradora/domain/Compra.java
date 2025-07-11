@@ -1,6 +1,7 @@
 package System.Registradora.domain;
 
 import System.Registradora.dto.CompraDto;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -10,7 +11,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "compras")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -30,15 +30,16 @@ public class Compra {
     private String numeroFactura;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<DetalleCompra> detalleCompraList;
 
     @ManyToOne
-    @JoinColumn(name = "id_proveedor", nullable = false)
+    @JoinColumn(name = "proveedor_id", nullable = false)
     private Proveedor proveedor;
 
     // Relación con empleado
-    @ManyToOne
-    @JoinColumn(name = "id_empleado", nullable = false)
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "empleado_id")
     private Empleado empleado;
 
 /*

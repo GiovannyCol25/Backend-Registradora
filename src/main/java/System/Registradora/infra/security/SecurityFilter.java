@@ -24,11 +24,13 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        System.out.println("📥 Filtro de seguridad activado para: " + request.getRequestURI());
         var authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             var token = authHeader.substring(7);  // Remueve el "Bearer " con el espacio correcto
             try {
                 var nombreUsuario = tokenService.getSubject(token);
+                System.out.println("🔐 Usuario autenticado: " + nombreUsuario);
                 if (nombreUsuario != null) {
                     var usuario = usuarioRepository.findByLogin((String) nombreUsuario);
                     if (usuario != null) {

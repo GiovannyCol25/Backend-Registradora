@@ -12,7 +12,9 @@ import java.util.List;
 
 @Data
 @Getter
+@Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "empleados")
@@ -37,7 +39,7 @@ public class Empleado {
     @JsonManagedReference
     private Usuario usuario;
 
-    public Empleado(){}
+    /*public Empleado(){}
 
     public Empleado(EmpleadoDto datos){
         this.id = datos.id();
@@ -45,6 +47,7 @@ public class Empleado {
         this.cargo = datos.cargo();
         this.telefono = datos.telefono();
     }
+     */
 
     /*
     public void actualizarEmpleado(EmpleadoDto datos){
@@ -71,62 +74,5 @@ public class Empleado {
         if (datos.telefono() != null && datos.telefono() != 0){
             this.telefono = datos.telefono();
         }
-    }
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNombreEmpleado() {
-        return nombreEmpleado;
-    }
-
-    public void setNombreEmpleado(String nombreEmpleado) {
-        this.nombreEmpleado = nombreEmpleado;
-    }
-
-    public String getCargo() {
-        return cargo;
-    }
-
-    public void setCargo(String cargo) {
-        this.cargo = cargo;
-    }
-
-    public long getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(long telefono) {
-        this.telefono = telefono;
-    }
-
-    public List<Venta> getVentas() {
-        return ventas;
-    }
-
-    public void setVentas(List<Venta> ventas) {
-        this.ventas = ventas;
-    }
-
-    public List<Compra> getCompras() {
-        return compras;
-    }
-
-    public void setCompras(List<Compra> compras) {
-        this.compras = compras;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
     }
 }

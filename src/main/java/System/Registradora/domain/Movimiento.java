@@ -23,15 +23,15 @@ public class Movimiento {
     private TipoMovimiento tipoMovimiento;
 
     @ManyToOne
-    @JoinColumn(name = "id_producto")
+    @JoinColumn(name = "producto_id")
     private Producto producto;
 
     @ManyToOne
-    @JoinColumn(name = "id_detalle_venta")
+    @JoinColumn(name = "detalle_venta_id")
     private DetalleVenta detalleVenta;
 
     @ManyToOne
-    @JoinColumn(name = "id_detalle_compra")
+    @JoinColumn(name = "detalle_compra_id")
     private DetalleCompra detalleCompra;
 
 }
