@@ -9,6 +9,7 @@ public record VentaDto(
         Double totalVenta,
         Double descuento,
         String formaDePago,
+        Long clienteId,
         List<DetalleVentaDto> detalles // ✅ Lista de productos en la venta
 ) {
 }

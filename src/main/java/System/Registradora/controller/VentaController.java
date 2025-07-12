@@ -1,11 +1,11 @@
 package System.Registradora.controller;
 
 import System.Registradora.domain.*;
-import System.Registradora.domain.repositories.DetalleVentaRepository;
-import System.Registradora.domain.repositories.MovimientoRepository;
-import System.Registradora.domain.repositories.ProductoRepository;
-import System.Registradora.domain.repositories.VentaRepository;
+import System.Registradora.domain.repositories.*;
+import System.Registradora.domain.usuario.Usuario;
+import System.Registradora.domain.usuario.UsuarioRepository;
 import System.Registradora.dto.*;
+import System.Registradora.infra.security.AuthUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -41,6 +41,12 @@ public class VentaController {
     @Autowired
     private MovimientoRepository movimientoRepository;
 
+    @Autowired
+    private ClienteRepository clienteRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
 //    public VentaController(VentaRepository ventaRepository, ProductoRepository productoRepository){
 //        this.ventaRepository = ventaRepository;
 //        this.productoRepository = productoRepository;
@@ -53,6 +59,19 @@ public class VentaController {
         Venta venta = new Venta();
         venta.setDescuento(ventaDto.descuento());
         venta.setFormaDePago(ventaDto.formaDePago());
+
+        Cliente cliente = clienteRepository.findById(ventaDto.clienteId())
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cliente no encontrado"));
+        venta.setCliente(cliente);
+
+        String login = AuthUtils.getLoginFromToken();
+        Usuario usuario = usuarioRepository.findUsuarioByLogin(login);
+
+        if (usuario == null || usuario.getEmpleado() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario sin empleado asignado");
+        }
+        Empleado empleado = usuario.getEmpleado();
+        venta.setEmpleado(empleado);
 
         venta = ventaRepository.save(venta); // ✅ Guardar antes de usar en DetalleVenta
         final Venta ventaFinal = venta; // ✅ Asegurar que `venta` es reconocida en la lambda
@@ -95,6 +114,9 @@ public class VentaController {
             detalleVenta.setCantidad(detalleDto.cantidad());
             detalleVenta.setPrecioUnitario(precioUnitario);
 
+            producto.setStock(producto.getStock() - detalleDto.cantidad());
+            productoRepository.save(producto);
+
             // Registrar movimiento de salida
             Movimiento movimiento = new Movimiento();
             movimiento.setCantidad(detalleDto.cantidad());
@@ -122,6 +144,7 @@ public class VentaController {
                         venta.getTotalVenta(),
                         venta.getDescuento(),
                         venta.getFormaDePago(),
+                        venta.getCliente().getId(),
                         detalles.stream().map(detalle -> new DetalleVentaDto(
                                 detalle.getId(),
                                 detalle.getProducto().getNombreProducto(),
@@ -141,6 +164,7 @@ public class VentaController {
                         venta.getTotalVenta(),
                         venta.getDescuento(),
                         venta.getFormaDePago(),
+                        venta.getCliente().getId(),
                         venta.getDetalles().stream().map(detalle ->
                                 new DetalleVentaDto(
                                         detalle.getId(),
@@ -171,6 +195,7 @@ public class VentaController {
                     venta.getTotalVenta(),
                     venta.getDescuento(),
                     venta.getFormaDePago(),
+                    venta.getCliente().getId(),
                     venta.getDetalles().stream().map(detalle ->
                             new DetalleVentaDto(
                                     detalle.getId(),
