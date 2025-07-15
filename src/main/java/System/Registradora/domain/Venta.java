@@ -13,7 +13,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Entity
 @Table(name = "ventas")
-@Data
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Getter
@@ -54,7 +55,7 @@ public class Venta {
 //    @JsonBackReference
 //    private Producto producto;
 
-    public Venta(){}
+/*    public Venta(){}
 
     public Venta(VentaDto ventaDto){
         this.id = ventaDto.id();
@@ -64,51 +65,5 @@ public class Venta {
         this.formaDePago = ventaDto.formaDePago();
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Date getFechaVenta() {
-        return fechaVenta;
-    }
-
-    public void setFechaVenta(Date fechaVenta) {
-        this.fechaVenta = fechaVenta;
-    }
-
-    public Double getTotalVenta() {
-        return totalVenta;
-    }
-
-    public void setTotalVenta(Double totalVenta) {
-        this.totalVenta = totalVenta;
-    }
-
-    public Double getDescuento() {
-        return descuento;
-    }
-
-    public void setDescuento(Double descuento) {
-        this.descuento = descuento;
-    }
-
-    public String getFormaDePago() {
-        return formaDePago;
-    }
-
-    public void setFormaDePago(String formaDePago) {
-        this.formaDePago = formaDePago;
-    }
-
-    public List<DetalleVenta> getDetalles() {
-        return detalles;
-    }
-
-    public void setDetalles(List<DetalleVenta> detalles) {
-        this.detalles = detalles;
-    }
+ */
 }

@@ -32,4 +32,6 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     @Query("SELECT new System.Registradora.dto.TotalVentasPorDiaDTO(v.fechaVenta, SUM(v.totalVenta)) " +
             "FROM Venta v WHERE DATE(v.fechaVenta) = :fecha GROUP BY v.fechaVenta")
     List<TotalVentasPorDiaDTO> obtenerTotalVentasPorFecha(@Param("fecha") Date fecha);
+
+    Page<Venta> findAll(Object o, Pageable paginacion);
 }

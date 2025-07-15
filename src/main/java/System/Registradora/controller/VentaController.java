@@ -6,6 +6,7 @@ import System.Registradora.domain.usuario.Usuario;
 import System.Registradora.domain.usuario.UsuarioRepository;
 import System.Registradora.dto.*;
 import System.Registradora.infra.security.AuthUtils;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -60,9 +62,13 @@ public class VentaController {
         venta.setDescuento(ventaDto.descuento());
         venta.setFormaDePago(ventaDto.formaDePago());
 
-        Cliente cliente = clienteRepository.findById(ventaDto.clienteId())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cliente no encontrado"));
-        venta.setCliente(cliente);
+        if (ventaDto.clienteId() != null){
+            Cliente cliente = clienteRepository.findById(ventaDto.clienteId())
+                    .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cliente no encontrado"));
+            venta.setCliente(cliente);
+        } else {
+            venta.setCliente(null);
+        }
 
         String login = AuthUtils.getLoginFromToken();
         Usuario usuario = usuarioRepository.findUsuarioByLogin(login);
@@ -85,11 +91,6 @@ public class VentaController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Producto no encontrado: " + detalleDto.nombreProducto());
             }
             Producto producto = productoOptional.get();
-
-            // 🛠 Verificar qué valores se están recibiendo en el backend
-            System.out.println("Procesando producto: " + detalleDto.nombreProducto());
-            System.out.println("Precio en BD: " + producto.getPrecioVenta());
-            System.out.println("Precio enviado por el frontend: " + detalleDto.precioUnitario());
 
             // 🛠 Si el precio en la BD es 0, tomar el precio desde el frontend (detalleDto.precioUnitario)
             Double precioUnitario = producto.getPrecioVenta();
@@ -144,7 +145,7 @@ public class VentaController {
                         venta.getTotalVenta(),
                         venta.getDescuento(),
                         venta.getFormaDePago(),
-                        venta.getCliente().getId(),
+                        venta.getCliente() != null ? venta.getCliente().getId(): null,
                         detalles.stream().map(detalle -> new DetalleVentaDto(
                                 detalle.getId(),
                                 detalle.getProducto().getNombreProducto(),
@@ -156,6 +157,7 @@ public class VentaController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('VENDEDOR')")
     public ResponseEntity<Map<String, Object>> listarVentas(@PageableDefault(size = 20) Pageable paginacion) {
         Page<VentaDto> ventas = ventaRepository.listarVentas(paginacion).map(venta ->
                 new VentaDto(
@@ -164,7 +166,7 @@ public class VentaController {
                         venta.getTotalVenta(),
                         venta.getDescuento(),
                         venta.getFormaDePago(),
-                        venta.getCliente().getId(),
+                        venta.getCliente() != null ? venta.getCliente().getId() : null,
                         venta.getDetalles().stream().map(detalle ->
                                 new DetalleVentaDto(
                                         detalle.getId(),
@@ -219,35 +221,6 @@ public class VentaController {
         return ventas.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(ventas);
     }
 
-    /*
-    // Endpoint para obtener las ventas diarias
-    @GetMapping("/diarias")
-    public ResponseEntity<List<VentaDto>> obtenerVentasDiarias() {
-        List<Venta> ventasDiarias = ventaRepository.obtenerTotalVentasDiarias();
-
-        if (!ventasDiarias.isEmpty()) {
-            List<VentaDto> ventasDto = ventasDiarias.stream().map(venta ->
-                    new VentaDto(
-                            venta.getId(),
-                            venta.getFechaVenta(),
-                            venta.getTotalVenta(),
-                            venta.getDescuento(),
-                            venta.getFormaDePago(),
-                            venta.getDetalles().stream().map(detalle ->
-                                    new DetalleVentaDto(
-                                            detalle.getId(),
-                                            detalle.getProducto().getNombreProducto(),
-                                            detalle.getCantidad(),
-                                            detalle.getPrecioUnitario()
-                                    )).collect(Collectors.toList())
-                    )).collect(Collectors.toList());
-            return ResponseEntity.ok(ventasDto);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    */
-
     @GetMapping("/ventas-diarias/total/{fecha}")
     public ResponseEntity<TotalVentasPorDiaDTO> obtenerTotalVentasFecha(@PathVariable @DateTimeFormat
             (iso = DateTimeFormat.ISO.DATE) Date fecha){
@@ -301,18 +274,6 @@ public class VentaController {
         if (ventasFiltradas.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-
-//        // 6️⃣ Calcular el total vendido
-//        double totalVendido = ventasFiltradas.stream()
-//                .mapToDouble(detalle -> detalle.cantidad() * detalle.precioUnitario())
-//                .sum();
-//
-//        // 7️⃣ Construir la respuesta con el mensaje
-//        RespuestaConsultaVentasDto respuesta = new RespuestaConsultaVentasDto(
-//                "El total del producto vendido hoy es de: " + totalVendido,
-//                ventasFiltradas
-//        );
-
         return ResponseEntity.ok(ventasFiltradas);
     }
 
@@ -332,48 +293,52 @@ public class VentaController {
         return texto.trim().toLowerCase().replaceAll("\\s+", "");
     }
 
-//    @GetMapping("/por-producto")
-//    public ResponseEntity<List<RespuestaConsultaVentasDto>> consultaVentasPorProducto(@RequestParam(value = "nombreProducto") String nombreProducto) {
-//        // 1️⃣ Reutilizamos listarVentas() sin filtro
-//        Page<Venta> todasLasVentas = ventaRepository.listarVentas(PageRequest.of(0, 100));
-//        // 2️⃣ Filtramos las ventas que contienen el producto buscado
-//        List<ConsultaVentasPorProductoDto> ventasFiltradas = todasLasVentas.stream()
-//                .flatMap(venta -> venta.getDetalles().stream()
-//                        .filter(detalle -> detalle.getProducto().getNombreProducto().equalsIgnoreCase(nombreProducto))
-//                        .map(detalle -> new ConsultaVentasPorProductoDto(
-//                                detalle.getProducto().getNombreProducto(),
-//                                detalle.getCantidad(),
-//                                detalle.getPrecioUnitario(),
-//                                detalle.getId(),
-//                                detalle.getVenta().getFechaVenta()
-//                        )))
-//                .toList();
-//
-//        // 3️⃣ Validamos si hay resultados
-//        if (ventasFiltradas.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-//        }
-//        // 4️⃣ Calculamos el total sumando (cantidad * precioUnitario)
-//        double totalVendido = ventasFiltradas.stream()
-//                .mapToDouble(detalle -> detalle.cantidad() * detalle.precioUnitario())
-//                .sum();
-//
-//        // 5️⃣ Construimos la respuesta con el mensaje y el total
-//        RespuestaConsultaVentasDto respuesta = new RespuestaConsultaVentasDto(
-//                "El total del producto vendido hoy es de: " + totalVendido,
-//                ventasFiltradas
-//        );
-//
-//        return ResponseEntity.ok(Collections.singletonList(respuesta));
-//    }
+    @GetMapping("/filtroVentas")
+    public ResponseEntity<Map<String, Object>> filtroVentas(
+            @PageableDefault(size = 20) Pageable paginacion,
+            @RequestParam(required = false) String formaPago,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
 
-//    @DeleteMapping("/{id}")
-//    @Transactional
-//    public ResponseEntity<VentaDto>EliminarVenta(@PathVariable Long id){
-//        Optional<Venta>optionalVenta = ventaRepository.findById(id);
-//        if (optionalVenta.isPresent()){
-//            Venta venta = optionalVenta.get();
-//            venta.
-//        }
-//    }
+        Page<Venta> resultados = ventaRepository.findAll((root, query, cb) -> {
+            List<Predicate> filtros = new ArrayList<>();
+            if (formaPago != null && !formaPago.isEmpty()) {
+                filtros.add(cb.equal(root.get("formaDePago"), formaPago));
+            }
+            if (fechaInicio != null) {
+                filtros.add(cb.greaterThanOrEqualTo(root.get("fechaVenta"), fechaInicio.atStartOfDay()));
+            }
+            if (fechaFin != null) {
+                filtros.add(cb.lessThanOrEqualTo(root.get("fechaVenta"), fechaFin.atTime(23, 59, 59)));
+            }
+            return cb.and(filtros.toArray(new Predicate[0]));
+        }, paginacion);
+
+        Page<VentaDto> ventasDto = resultados.map(venta ->
+                new VentaDto(
+                        venta.getId(),
+                        venta.getFechaVenta(),
+                        venta.getTotalVenta(),
+                        venta.getDescuento(),
+                        venta.getFormaDePago(),
+                        venta.getCliente() != null ? venta.getCliente().getId() : null,
+                        venta.getDetalles().stream().map(detalle ->
+                                new DetalleVentaDto(
+                                        detalle.getId(),
+                                        detalle.getProducto().getNombreProducto(),
+                                        detalle.getCantidad(),
+                                        detalle.getPrecioUnitario()
+                                )
+                        ).toList()
+                )
+        );
+
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("contenido", ventasDto.getContent());
+        respuesta.put("paginaActual", ventasDto.getNumber());
+        respuesta.put("totalElementos", ventasDto.getTotalElements());
+        respuesta.put("totalPaginas", ventasDto.getTotalPages());
+
+        return ResponseEntity.ok(respuesta);
+    }
 }
