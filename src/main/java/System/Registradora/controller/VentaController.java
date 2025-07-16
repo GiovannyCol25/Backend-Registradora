@@ -294,6 +294,7 @@ public class VentaController {
     }
 
     @GetMapping("/filtroVentas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('VENDEDOR')")
     public ResponseEntity<Map<String, Object>> filtroVentas(
             @PageableDefault(size = 20) Pageable paginacion,
             @RequestParam(required = false) String formaPago,

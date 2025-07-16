@@ -5,6 +5,7 @@ import System.Registradora.dto.TotalVentasPorDiaDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,7 +14,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public interface VentaRepository extends JpaRepository<Venta, Long> {
+public interface VentaRepository extends JpaRepository<Venta, Long>, JpaSpecificationExecutor<Venta> {
 
     @Query("SELECT v FROM Venta v ORDER BY v.fechaVenta DESC")
     Page<Venta> listarVentas(Pageable paginacion);
@@ -32,6 +33,4 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     @Query("SELECT new System.Registradora.dto.TotalVentasPorDiaDTO(v.fechaVenta, SUM(v.totalVenta)) " +
             "FROM Venta v WHERE DATE(v.fechaVenta) = :fecha GROUP BY v.fechaVenta")
     List<TotalVentasPorDiaDTO> obtenerTotalVentasPorFecha(@Param("fecha") Date fecha);
-
-    Page<Venta> findAll(Object o, Pageable paginacion);
 }
