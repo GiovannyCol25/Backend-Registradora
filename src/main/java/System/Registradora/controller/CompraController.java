@@ -6,21 +6,23 @@ import System.Registradora.domain.usuario.Usuario;
 import System.Registradora.domain.usuario.UsuarioRepository;
 import System.Registradora.dto.CompraDto;
 import System.Registradora.dto.DetalleCompraDto;
+import jakarta.persistence.criteria.Predicate;
+import System.Registradora.dto.TotalComprasPorDiaDto;
 import System.Registradora.infra.security.AuthUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @RestController
@@ -182,5 +184,64 @@ public class CompraController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/compras-diarias/{fecha}")
+    public ResponseEntity<List<TotalComprasPorDiaDto>> obtenerComprasPorFecha(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)Date fecha){
+        List<TotalComprasPorDiaDto> compras = compraRepository.obtenerTotalComprasPorFecha(fecha);
+
+        return compras.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/compras-diarias/total/{fecha}")
+    public ResponseEntity<TotalComprasPorDiaDto> obtenerTotalComprasFecha(@PathVariable @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE) Date fecha) {
+        List<TotalComprasPorDiaDto> totalCompras = compraRepository.obtenerTotalComprasPorFecha(fecha);
+        return totalCompras.isEmpty() ? ResponseEntity.notFound().build() :
+                ResponseEntity.ok(totalCompras.get(0));
+    }
+
+    @GetMapping("/filtroCompras")
+    public ResponseEntity<Map<String, Object>> filtroCompras(
+            @PageableDefault(size = 20) Pageable paginacion,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate fechaFin) {
+        Page<Compra> resultados = compraRepository.findAll((root, query, cb) -> {
+            List<Predicate> filtros = new ArrayList<>();
+            if (fechaInicio != null){
+                filtros.add(cb.greaterThanOrEqualTo(root.get("fechaCompra"),
+                        fechaInicio.atStartOfDay()));
+            }
+            if (fechaFin != null){
+                filtros.add(cb.lessThanOrEqualTo(root.get("fechaCompra"),fechaFin.atTime(23,59,59)));
+            }
+            return cb.and(filtros.toArray(new Predicate[0]));
+        }, paginacion);
+
+        Page<CompraDto> comprasDto = resultados.map(compra ->
+                new CompraDto(
+                        compra.getId(),
+                        compra.getFechaCompra(),
+                        compra.getTotalCompra(),
+                        compra.getNumeroFactura(),
+                        compra.getProveedor().getId(),
+                        compra.getDetalleCompraList().stream().map(detalleCompra ->
+                                new DetalleCompraDto(
+                                        detalleCompra.getId(),
+                                        detalleCompra.getProducto().getId(),
+                                        detalleCompra.getProducto().getNombreProducto(),
+                                        detalleCompra.getCantidad(),
+                                        detalleCompra.getPrecioUnitario())
+                        ).collect(Collectors.toList())
+                ));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("compras", comprasDto.getContent());
+        response.put("totalPaginas", comprasDto.getTotalPages());
+        response.put("totalElementos", comprasDto.getTotalElements());
+        response.put("paginaActual", comprasDto.getNumber());
+
+        return ResponseEntity.ok(response);
     }
 }

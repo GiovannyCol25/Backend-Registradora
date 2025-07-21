@@ -56,6 +56,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PUT,"/proveedores/**").hasAnyRole("ADMIN", "ALMACENISTA")
                         .requestMatchers(HttpMethod.GET,"/consultas/**").hasAnyRole("ADMIN", "ALMACENISTA", "VENDEDOR")
                         .requestMatchers(HttpMethod.GET,"/ventas/filtroVentas").hasAnyRole("ADMIN", "ALMACENISTA", "VENDEDOR")
+                        .requestMatchers(HttpMethod.GET,"/productos/codigoBarras/**").hasAnyRole("ADMIN", "ALMACENISTA", "VENDEDOR")
+                        .requestMatchers(HttpMethod.GET,"/ventas/ventas-diarias/total/{fecha}").hasAnyRole("ADMIN", "ALMACENISTA", "VENDEDOR")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
